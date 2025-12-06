@@ -1,10 +1,10 @@
-# INSTRUCTIONS.md — Autonomous Codex Behavior Manual
+# INSTRUCTIONS.md — Autonomous Codex Behavior Manual (Ultra Edition)
 
 # Project: Physical AI Textbook Engine
 
-# Purpose: Define EXACT behavior Codex must follow.
+# Purpose: Define EXACT behavior and fail-safe rules for the Codex Agent.
 
-Codex MUST follow every rule in this file.
+Codex MUST obey EVERY rule in this file with ZERO deviation.
 
 ──────────────────────────────────────────────────────────────
 
@@ -12,57 +12,175 @@ Codex MUST follow every rule in this file.
 
 Codex MUST:
 
-- Execute tasks strictly in order.
-- **LOG EVERYTHING**: Generate history and commit files for EVERY interaction.
+- Follow a strict spec-driven workflow.
+- Execute tasks ONLY when the user explicitly triggers them.
+- NEVER skip, merge, reorder, or invent tasks.
+- Generate history logs and commit files for EVERY interaction.
+- Maintain deterministic, predictable output.
+- STOP after every task until further instruction.
+
+If Codex encounters missing details:
+
+- It MUST ask for clarification before proceeding.
 
 ──────────────────────────────────────────────────────────────
 
-# 2. TASK EXECUTION RULES
+# 2. TASK EXECUTION RULES (CORE LOOP)
 
-Codex ONLY executes tasks when the user says:
+Codex only performs a task when the user says:
+
 `Proceed with Task <number>`
 
-After completing a task, Codex MUST:
+When this command is received, Codex MUST:
 
-1. Mark the task as done `[x]` in tasks.md
-2. Generate a history file
-3. Generate a GitHub commit file
-4. STOP and wait.
+1. Re-read `info.md`
+2. Re-read this `instructions.md` file
+3. Execute ONLY the exact requested task
+4. Update `tasks.md`:
+   - Mark that task as `[x]` done
+   - Do NOT modify untouched tasks
+
+After completing the task, Codex MUST:
+
+1. Generate a history log file
+2. Generate a GitHub commit file
+3. STOP output and wait silently
+
+Codex MUST NOT:
+
+- Run the next task automatically
+- Edit tasks outside their scope
+- Invent additional steps
 
 ──────────────────────────────────────────────────────────────
 
-# 3. HISTORY FILE RULES (LOG EVERYTHING)
+# 3. HISTORY FILE RULES (EVERY MESSAGE LOGGED)
 
-**Rule:** Every prompt/message from the user triggers a history file.
+Every user message MUST generate a history log.
 
-- **Task-based**: `history/prompts/<category>/task-<number>-<name>.md`
-- **Misc/General**: `history/prompts/misc/<timestamp>-<topic>.md`
+### File Placement
+
+- **Task-based**:
+  `history/prompts/task/task-<number>-<short-name>.md`
+- **General/Misc**:
+  `history/prompts/misc/<timestamp>-<topic>.md`
+
+### Content Requirements
+
+Each history file MUST include:
+
+- Timestamp
+- User message
+- Codex response summary
+- Task reference (if any)
+- Internal reasoning summary (HIGH-LEVEL ONLY)
+- What changed in the project
+
+Codex MUST NOT expose chain-of-thought.  
+Only provide high-level summaries.
 
 ──────────────────────────────────────────────────────────────
 
-# 4. GITHUB COMMIT FILE RULES (LOG EVERYTHING)
+# 4. GITHUB COMMIT SYSTEM RULES
 
-**Rule:** Every prompt/message from the user triggers a commit file.
+Every user message MUST produce a GitHub commit file.
 
-- **Task-based**: `github-commit/task-<number>-<name>.commit.md`
-- **Misc/General**: `github-commit/misc-<timestamp>-<topic>.commit.md`
+### Path:
 
-**CRITICAL: AUTOMATIC GIT PUSH**
-After generating the commit file, Codex MUST automatically:
-1. Ensure Git is initialized and remote is set to: `https://github.com/NomanKhaliq1/Physical-AI-Textbook-Engine`
-2. Run the actual git commands:
+- **Task-based**:
+  `github-commit/task-<number>-<short-name>.commit.md`
+- **Misc**:
+  `github-commit/misc-<timestamp>-<topic>.commit.md`
+
+### Required Commit Structure:
+
+Each commit file MUST contain:
+
+- Commit Title
+- Commit Summary
+- Task Number (if task-based)
+- Files Modified
+- Reason for Change
+- Ready-to-copy Git commit message
+- Ready-to-copy Git commit description
+
+──────────────────────────────────────────────────────────────
+
+# 4.1 AUTOMATIC GIT PUSH RULES
+
+Codex MUST ensure git actions are ALWAYS executed cleanly:
+
+1. Ensure repository is initialized
+2. Ensure remote:
+   `https://github.com/NomanKhaliq1/Physical-AI-Textbook-Engine`
+3. Run:
    ```bash
    git add .
    git commit -m "<Commit Title>"
+   git pull --rebase origin main || true
    git push origin main
    ```
 
+### Additional Safety:
+
+- If a commit is empty, Codex MUST create a dummy file to avoid failures.
+- If `main` has diverged, Codex MUST prefer **rebase**, not merge.
+- If push fails, Codex MUST retry once automatically.
+
 ──────────────────────────────────────────────────────────────
 
-# 5. USER INTERACTION RULES
+# 5. USER INTERACTION RULES (MANDATORY LOOP)
 
-Codex MUST read `instructions.md` after EVERY task.
+After EVERY task, Codex MUST:
+
+1. STOP all execution
+2. Provide a short message:
+   “Task <number> completed. Waiting for next command.”
+3. Read `instructions.md` AGAIN before next action
 
 ──────────────────────────────────────────────────────────────
 
-# END OF INSTRUCTIONS.md
+# 6. ERROR & SAFETY RULES
+
+If Codex detects any of the following:
+
+- Missing information
+- Ambiguous design decisions
+- Conflicting instructions
+- Undefined task behavior
+
+Codex MUST STOP and ask:
+
+> “More details required. Please clarify before I continue.”
+
+Codex MUST NOT:
+
+- Assume missing details
+- Guess implementation
+- Modify the spec
+- Override user instructions
+- Run tasks on its own
+
+──────────────────────────────────────────────────────────────
+
+# 7. OUTPUT FORMAT RULES
+
+Codex MUST keep output:
+
+- Clean
+- Structured
+- Minimal
+- Deterministic
+- Professional
+
+No unnecessary commentary.  
+No creative deviation.
+
+──────────────────────────────────────────────────────────────
+
+# 8. FINAL RULE
+
+If `instructions.md` and any other rule conflict:
+**instructions.md ALWAYS wins.**
+
+# END OF FILE
